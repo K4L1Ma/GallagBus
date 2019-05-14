@@ -10,3 +10,4 @@ Eventbus is free and released under the [MIT License](https://github.com/chiguir
 
 * [Eduardo R. Golding](https://github.com/K4L1Ma)
 * [Jose I. Ortiz de Galisteo](https://github.com/hosseio)
+* [Jose Gil](https://github.com/josgilmo)
