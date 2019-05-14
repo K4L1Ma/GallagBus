@@ -7,18 +7,18 @@ type Middleware interface {
 }
 
 type eventHandlingMiddleware struct {
-	handlerResolver EventHandlerResolver
+	subscriberResolver EventSubscriberResolver
 }
 
 func (m eventHandlingMiddleware) Execute(event Event, next EventCallable) error{
-	handlers, err := m.handlerResolver.Resolve(event)
+	subscribers, err := m.subscriberResolver.Resolve(event)
 	if err != nil {
 		return err
 	}
 
 	// TODO go routines
-	for _, handler := range handlers {
-		if err = handler.Handle(event); err!=nil{
+	for _, subscriber := range subscribers {
+		if err = subscriber.Handle(event); err!=nil{
 			return err
 		}
 	}
@@ -28,8 +28,8 @@ func (m eventHandlingMiddleware) Execute(event Event, next EventCallable) error{
 
 type MiddlewareList []Middleware
 
-func NewMiddlewareList(eventHandler eventHandlingMiddleware) MiddlewareList {
-	return []Middleware{eventHandler}
+func NewMiddlewareList(eventSubscriber eventHandlingMiddleware) MiddlewareList {
+	return []Middleware{eventSubscriber}
 }
 
 func (m MiddlewareList) Queue(middleware ...Middleware) MiddlewareList {

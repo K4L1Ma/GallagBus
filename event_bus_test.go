@@ -5,13 +5,12 @@ import (
 	"testing"
 )
 
-type AEventHandler struct {
-	NumberOfHandleCalls int
+type AEventSubscriber struct {
+	NumberOfSubscribeCalls int
 }
 
-func (h *AEventHandler) Handle(event Event) error {
-	h.NumberOfHandleCalls++
-	return nil
+func (h *AEventSubscriber) Handle(event Event) {
+	h.NumberOfSubscribeCalls++
 }
 
 type AMiddleware struct {
@@ -24,24 +23,24 @@ func (m *AMiddleware) Execute(event Event, next EventCallable) error {
 	return next(event)
 }
 
-func TestMapHandlerResolver_Resolve(t *testing.T) {
+func TestMapSubscriberResolver_Resolve(t *testing.T) {
 	isRequire := require.New(t)
 	event := struct{}{}
-	t.Run("Given a map handler resolver", func(t *testing.T) {
-		sut := NewMapHandlerResolver()
-		t.Run("When event handler is not found", func(t *testing.T) {
-			handler, err := sut.Resolve(event)
+	t.Run("Given a map subscriber resolver", func(t *testing.T) {
+		sut := NewMapSubscriberResolver()
+		t.Run("When event subscriber is not found", func(t *testing.T) {
+			subscriber, err := sut.Resolve(event)
 			t.Run("Then an error is returned", func(t *testing.T) {
-				isRequire.Nil(handler)
+				isRequire.Nil(subscriber)
 				isRequire.Error(err)
 			})
 		})
-		t.Run("When a event with its handler is added", func(t *testing.T) {
-			handler := &AEventHandler{}
-			sut.AddHandler(event, handler)
-			t.Run("Then the handler is resolved", func(t *testing.T) {
-				resolvedHandlers, err := sut.Resolve(event)
-				isRequire.Equal(handler, resolvedHandlers[0])
+		t.Run("When a event with its subscriber is added", func(t *testing.T) {
+			subscriber := &AEventSubscriber{}
+			sut.AddSubscriber(event, subscriber)
+			t.Run("Then the subscriber is resolved", func(t *testing.T) {
+				resolvedSubscribers, err := sut.Resolve(event)
+				isRequire.Equal(subscriber, resolvedSubscribers[0])
 				isRequire.NoError(err)
 			})
 		})
@@ -51,42 +50,42 @@ func TestMapHandlerResolver_Resolve(t *testing.T) {
 func TestEventbus_Dispatch(t *testing.T) {
 	isRequire := require.New(t)
 	t.Run("Given a eventbus event bus without middlewares", func(t *testing.T) {
-		handler := AEventHandler{}
-		handlerResolver := EventHandlerResolverMock{
-			ResolveFunc: func(event Event) ([]EventHandler, error) {
-				return []EventHandler{&handler}, nil
+		subscriber := AEventSubscriber{}
+		subscriberResolver := EventSubscriberResolverMock{
+			ResolveFunc: func(event Event) ([]EventSubscriber, error) {
+				return []EventSubscriber{&subscriber}, nil
 			},
 		}
-		sut := NewBus(&handlerResolver)
+		sut := NewBus(&subscriberResolver)
 		t.Run("When a event is dispatched", func(t *testing.T) {
 			event := struct{}{}
 			sut.Publish(event)
-			t.Run("Then the resolved event handler handles the event", func(t *testing.T) {
-				resolverHasBeenCalled := len(handlerResolver.ResolveCalls()) > 0
+			t.Run("Then the resolved event subscriber subscribes the event", func(t *testing.T) {
+				resolverHasBeenCalled := len(subscriberResolver.ResolveCalls()) > 0
 				isRequire.True(resolverHasBeenCalled)
-				handlerHasBeenCalled := handler.NumberOfHandleCalls > 0
-				isRequire.True(handlerHasBeenCalled)
+				subscriberHasBeenCalled := subscriber.NumberOfSubscribeCalls > 0
+				isRequire.True(subscriberHasBeenCalled)
 			})
 		})
 	})
 	t.Run("Given a eventbus event bus with middlewares", func(t *testing.T) {
 		aMiddleware := &AMiddleware{}
 		anotherMiddleware := &AMiddleware{}
-		handler := AEventHandler{}
-		handlerResolver := EventHandlerResolverMock{
-			ResolveFunc: func(event Event) ([]EventHandler, error) {
-				return []EventHandler{&handler}, nil
+		subscriber := AEventSubscriber{}
+		subscriberResolver := EventSubscriberResolverMock{
+			ResolveFunc: func(event Event) ([]EventSubscriber, error) {
+				return []EventSubscriber{&subscriber}, nil
 			},
 		}
-		sut := NewBus(&handlerResolver, aMiddleware, anotherMiddleware)
+		sut := NewBus(&subscriberResolver, aMiddleware, anotherMiddleware)
 		t.Run("When a event is dispatched", func(t *testing.T) {
 			event := struct{}{}
 			sut.Publish(event)
-			t.Run("Then the resolved event handler handles the event", func(t *testing.T) {
-				resolverHasBeenCalled := len(handlerResolver.ResolveCalls()) > 0
+			t.Run("Then the resolved event subscriber subscribes the event", func(t *testing.T) {
+				resolverHasBeenCalled := len(subscriberResolver.ResolveCalls()) > 0
 				isRequire.True(resolverHasBeenCalled)
-				handlerHasBeenCalled := handler.NumberOfHandleCalls > 0
-				isRequire.True(handlerHasBeenCalled)
+				subscriberHasBeenCalled := subscriber.NumberOfSubscribeCalls > 0
+				isRequire.True(subscriberHasBeenCalled)
 			})
 			t.Run("And the middlewares are executed", func(t *testing.T) {
 				isRequire.True(aMiddleware.NumberOfExecuteCalls > 0)

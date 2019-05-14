@@ -2,8 +2,8 @@ package eventbus
 
 type Event interface{}
 
-type EventHandler interface {
-	Handle(event Event) error
+type EventSubscriber interface {
+	Handle(event Event)
 }
 
 type EventBus interface {
@@ -14,8 +14,8 @@ type Bus struct {
 	middlewares MiddlewareList
 }
 
-func NewBus(handlerResolver EventHandlerResolver, middlewares ...Middleware) Bus {
-	eventHandlingMiddleware := eventHandlingMiddleware{handlerResolver}
+func NewBus(subscriberResolver EventSubscriberResolver, middlewares ...Middleware) Bus {
+	eventHandlingMiddleware := eventHandlingMiddleware{subscriberResolver}
 	middlewareList := NewMiddlewareList(eventHandlingMiddleware).Queue(middlewares...)
 
 	return Bus{middlewareList}

@@ -10,32 +10,30 @@ type UserRegistered struct {
 	email string
 }
 
-type PrintUserOnRegisteredUserEventHandler struct{}
+type PrintUserOnRegisteredUserEventSubscriber struct{}
 
-func (h PrintUserOnRegisteredUserEventHandler) Handle(event eventbus.Event) error {
+func (h PrintUserOnRegisteredUserEventSubscriber) Handle(event eventbus.Event) {
 	userRegistered, ok := event.(UserRegistered)
 	if !ok {
-		return errors.New("Could not handle a non register user event")
+		return
 	}
 
 	fmt.Println("registered", userRegistered.email)
-
-	return nil
 }
 
 type emailSender func(email string) error
 
-type SendWelcomeEmailUserOnRegisteredUserEventHandler struct{
+type SendWelcomeEmailUserOnRegisteredUserEventSubscriber struct{
 	emailSender emailSender
 }
 
-func (h SendWelcomeEmailUserOnRegisteredUserEventHandler) Handle(event eventbus.Event) error {
+func (h SendWelcomeEmailUserOnRegisteredUserEventSubscriber) Handle(event eventbus.Event) {
 	userRegistered, ok := event.(UserRegistered)
 	if !ok {
-		return errors.New("Could not handle a non register user event")
+		return
 	}
 
-	return h.emailSender(userRegistered.email)
+	h.emailSender(userRegistered.email)
 }
 
 type LoggingMiddleware struct{}
@@ -47,14 +45,14 @@ func (m LoggingMiddleware) Execute(event eventbus.Event, next eventbus.EventCall
 }
 
 func main() {
-	mapHandlerResolver := eventbus.NewMapHandlerResolver()
-	mapHandlerResolver.AddHandler(new(UserRegistered), new(PrintUserOnRegisteredUserEventHandler))
+	mapSubscriberResolver := eventbus.NewMapSubscriberResolver()
+	mapSubscriberResolver.AddSubscriber(new(UserRegistered), new(PrintUserOnRegisteredUserEventSubscriber))
 	emailSender := func(email string) error {
 		fmt.Println("sending welcome email to", email)
 		return nil
 	}
-	mapHandlerResolver.AddHandler(new(UserRegistered), SendWelcomeEmailUserOnRegisteredUserEventHandler{emailSender})
-	bus := eventbus.NewBus(&mapHandlerResolver, new(LoggingMiddleware))
+	mapSubscriberResolver.AddSubscriber(new(UserRegistered), SendWelcomeEmailUserOnRegisteredUserEventSubscriber{emailSender})
+	bus := eventbus.NewBus(&mapSubscriberResolver, new(LoggingMiddleware))
 	event := UserRegistered{"some@email.com"}
 	err := bus.Publish(event)
 	if err != nil {
