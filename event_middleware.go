@@ -16,11 +16,8 @@ func (m eventHandlingMiddleware) Execute(event Event, next EventCallable) error{
 		return err
 	}
 
-	// TODO go routines
 	for _, subscriber := range subscribers {
-		if err = subscriber.Handle(event); err!=nil{
-			return err
-		}
+		go subscriber.Handle(event)
 	}
 
 	return next(event)

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/chiguirez/eventbus"
-	"github.com/pkg/errors"
 )
 
 type UserRegistered struct {
