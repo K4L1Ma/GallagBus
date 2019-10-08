@@ -1,10 +1,10 @@
 # Gallagbus
 
-Eventbus is a simple event bus written in Go
+Gallagbus is a simple event bus written in Go
 
 ## License
 
-Eventbus is free and released under the [MIT License](https://github.com/chiguirez/eventbus/blob/master/LICENSE)
+Gallagbus is free and released under the [MIT License](https://github.com/chiguirez/eventbus/blob/master/LICENSE)
 
 # Authors
 
