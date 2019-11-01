@@ -1,4 +1,4 @@
-module github.com/chiguirez/gutenbus
+module github.com/chiguirez/gallagbus
 
 go 1.13
 
