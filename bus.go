@@ -61,6 +61,8 @@ type GallagBus struct {
 	eventListeners map[string][]EventListener
 }
 
+var _ EventBus = &GallagBus{}
+
 // This closes every channel on every handler
 func (g GallagBus) GracefulShutdown() {
 	for _, listeners := range g.eventListeners {
@@ -70,13 +72,13 @@ func (g GallagBus) GracefulShutdown() {
 	}
 }
 
-func New() GallagBus {
+func New() *GallagBus {
 	listeners := make(map[string][]EventListener)
-	return GallagBus{eventListeners: listeners}
+	return &GallagBus{eventListeners: listeners}
 }
 
 // Publish an Event
-func (g GallagBus) Publish(eventType string, event interface{}) {
+func (g *GallagBus) Publish(eventType string, event interface{}) {
 	if hs, ok := g.eventListeners[eventType]; ok {
 		eValue := reflect.ValueOf(event)
 		eType := reflect.TypeOf(event)
