@@ -15,17 +15,25 @@ func TestGallagBus(t *testing.T) {
 	var CallNumber uint64
 
 	const eventType = "test"
-	t.Run("Given a GallagBus and a EventListener Subscribed into the BUS", func(t *testing.T) {
+	t.Run("Given a GallagBus and a EventListener Subscribed using a regex", func(t *testing.T) {
 		eventBus := New()
 		listener := NewEventListener(func(struct{}) {
 			CallChannel <- struct{}{}
 		}, QueueSize(1))
-		eventBus.Subscribe(eventType, listener)
+		eventBus.Subscribe("t[a-z]+t", listener)
 		t.Run("When we publish an event with eventType test", func(t *testing.T) {
 			eventBus.Publish(eventType, struct{}{})
 			t.Run("Then listener got called 1 Time", func(t *testing.T) {
-				i := <-CallChannel
-				r.Equal(i, struct{}{}, "listener Should have been Called once")
+				for {
+					select {
+					case <-time.After(time.Millisecond * 1):
+						t.Fatal("listener Should have been Called once")
+						return
+					case i := <-CallChannel:
+						r.Equal(i, struct{}{}, "listener Should have been Called once")
+						return
+					}
+				}
 			})
 		})
 	})

@@ -3,6 +3,7 @@ package gallagbus
 import (
 	"fmt"
 	"reflect"
+	"regexp"
 )
 
 type EventListener struct {
@@ -57,8 +58,29 @@ type EventBus interface {
 	Subscribe(eventName string, eventListener EventListener)
 }
 
+type eventListenerList map[string][]EventListener
+
+func (e eventListenerList) add(evenType string, eventListener EventListener) {
+	e[evenType] = append(e[evenType], eventListener)
+}
+
+func (e eventListenerList) fetch(evenType string) ([]EventListener, bool) {
+	listeners := make([]EventListener, 0)
+	for k, v := range e {
+		matched, err := regexp.MatchString(k, evenType)
+		if err != nil {
+			continue
+		}
+		if !matched {
+			continue
+		}
+		listeners = append(listeners, v...)
+	}
+	return listeners, len(listeners) != 0
+}
+
 type GallagBus struct {
-	eventListeners map[string][]EventListener
+	eventListeners eventListenerList
 }
 
 var _ EventBus = &GallagBus{}
@@ -79,7 +101,7 @@ func New() *GallagBus {
 
 // Publish an Event
 func (g *GallagBus) Publish(eventType string, event interface{}) {
-	if hs, ok := g.eventListeners[eventType]; ok {
+	if hs, ok := g.eventListeners.fetch(eventType); ok {
 		eValue := reflect.ValueOf(event)
 		eType := reflect.TypeOf(event)
 		values := []reflect.Value{eValue}
@@ -92,5 +114,5 @@ func (g *GallagBus) Publish(eventType string, event interface{}) {
 }
 
 func (g *GallagBus) Subscribe(eventType string, eventListener EventListener) {
-	g.eventListeners[eventType] = append(g.eventListeners[eventType], eventListener)
+	g.eventListeners.add(eventType, eventListener)
 }
